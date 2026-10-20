@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms}
       POSTGRES_DB: ${POSTGRES_DB:-lms}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5434}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
@@ -29,26 +29,50 @@ services:
       APP_ENV: ${APP_ENV:-development}
       APP_NAME: ${APP_NAME:-ai-lms}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # 'disabled' (default) denies protected endpoints. 'development' is TEMPORARY
+      # local-only access without sign-in; the API refuses it unless APP_ENV=development.
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-disabled}
+      DEV_ACCESS_ROLES: ${DEV_ACCESS_ROLES:-learning_admin}
       # Built from POSTGRES_* so the container always targets the `db` service,
       # regardless of the host-oriented DATABASE_URL in a local .env file.
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-lms}:${POSTGRES_PASSWORD:-lms}@db:5432/${POSTGRES_DB:-lms}
+      AI_PROVIDER: ${AI_PROVIDER:-gemini}
+      AI_MODEL: ${AI_MODEL:-gemini-3.8-flash}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      PUBLIC_WEB_URL: ${PUBLIC_WEB_URL:-http://127.0.0.1:${WEB_PORT:-3001}}
+      GEMINI_TTS_MODEL: ${GEMINI_TTS_MODEL:-gemini-3.8-flash-tts}
+      RENDERER_URL: http://renderer:8080
     ports:
-      - "${API_PORT:-8000}:8000"
+      # Loopback only: local development services must not be reachable from the network.
+      - "127.0.0.1:${API_PORT:-8001}:8000"
     volumes:
       - ./services/api/app:/app/app
       - ./services/api/alembic:/app/alembic
+      - ./services/api/storage:/app/storage
     depends_on:
       db:
         condition: service_healthy
+
+  # Internal only (no host port). Renders course videos for AI Training Studio.
+  renderer:
+    build:
+      context: ./services/renderer
+    volumes:
+      # Same directory the API serves from /api/v1/studio/video-asset.
+      - ./services/api/storage/videos:/data/videos
+    mem_limit: 2g
+    shm_size: 1gb
 
   web:
     build:
       context: ./apps/web
     environment:
-      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:8000}
+      API_INTERNAL_URL: http://api:8000
       NODE_ENV: development
     ports:
-      - "${WEB_PORT:-3000}:3000"
+      - "127.0.0.1:${WEB_PORT:-3001}:3000"
     volumes:
       - ./apps/web/src:/app/src
       - ./apps/web/public:/app/public

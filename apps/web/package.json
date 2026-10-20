@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test src/lib/authoring.test.ts src/app/no-login.test.ts src/lib/studio.test.ts"
   },
   "dependencies": {
     "next": "16.4.2",

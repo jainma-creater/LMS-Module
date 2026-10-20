@@ -1,0 +1,21 @@
+{
+  "name": "lms-course-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Renders AI Training Studio course videos (narrated scene slides with captions) using Remotion.",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.536",
+    "@remotion/renderer": "4.0.536",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "4.0.536"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "typescript": "^5.6.0"
+  }
+}

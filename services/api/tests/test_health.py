@@ -15,6 +15,13 @@ def test_readyz_reports_database_ok(client):
     body = response.json()
     assert body["status"] == "ready"
     assert body["database"] == "ok"
+    assert body["checks"]["database"] == "ok"
+
+
+def test_process_time_header_present(client):
+    response = client.get("/healthz")
+    assert "x-process-time-ms" in response.headers
+    assert float(response.headers["x-process-time-ms"]) >= 0
 
 
 def test_request_id_header_generated(client):
